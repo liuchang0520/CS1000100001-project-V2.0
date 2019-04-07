@@ -1,0 +1,47 @@
+change the number of M && R, test the latency
+
+how to inform the reducers about the location of intermediate files?
+
+
+deal with slow worker? 95%...
+
+how to find idle workers? golang: channel;  java: no idea...
+
+task assignment:
+RPC, gRPC
+
+Master/Worker Simulating:
+	Thread Pool
+
+Input Partition
+
+Fault tolerance: golang ==> channel, java ...
+				 ping the workers who failed the tasks, before rejoining
+
+
+ZooKeeper
+
+
+About internship:
+
+	data streaming / data ingestion: Kafka, flink, gobblin
+
+	Database integration: AresDB, Pinot
+
+
+
+
+//////////////////////////////
+project submit to Prof.Nath:
+go env setup
+shell script	
+
+
+
+
+//////////////////////////////
+submit:
+
+We've coverd some assignments for simple map reduce python program, either sequentially or multi threaded.
+
+In this project I will try to simulate this paper: 《...》 for the internal implementation.(task assigment, fault tolarance, etc.)
