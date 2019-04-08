@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/rpc"
 	"net/http"
-	"common"
+	c "common"
 )
 
 type Worker struct { //Worker Struct
@@ -14,7 +14,7 @@ type Worker struct { //Worker Struct
 }
 //implement worker's rpc api
 //this rpc api is used to call worker to do a specific map/reduce task
-func (worker *Worker) Work(args *WorkArgs, res *WorkerRes) error {
+func (worker *Worker) Work(args *c.WorkArgs, res *c.WorkerRes) error {
 	return nil
 }
 
@@ -29,14 +29,14 @@ func workerInit(port string) {
 	// fmt.Println("http handler started")
 	// fmt.Println("listener started")
 
-	workerClient, err := rpc.DialHTTP("tcp", "localhost:" + MASTER_PORT)
+	workerClient, err := rpc.DialHTTP("tcp", "localhost:" + c.MASTER_PORT)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("client created")
 
 	//register
-	if err = workerClient.Call("Master.RegisterWorker", &RegisterArgs{Port: port}, &MasterRes{}); err != nil {
+	if err = workerClient.Call("Master.RegisterWorker", &c.RegisterArgs{Port: port}, &c.MasterRes{}); err != nil {
 		log.Fatal(err)
 	}
 

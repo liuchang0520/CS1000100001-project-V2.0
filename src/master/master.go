@@ -5,7 +5,7 @@ import (
 	"os"
 	"log"
 	"net/http"
-	"common"
+	c "common"
 	"net/rpc"
 )
 
@@ -16,7 +16,7 @@ type Master struct { //master struct
 
 //implement master's rpc api
 //this rpc api is used to register workers
-func (master *Master) RegisterWorker(args *RegisterArgs, res *MasterRes) error {
+func (master *Master) RegisterWorker(args *c.RegisterArgs, res *c.MasterRes) error {
 	fmt.Println(args.Port, " registering")
 	master.workerChan <- args.Port
 	fmt.Printf("worker at port: %s registered\n", args.Port)
@@ -25,7 +25,7 @@ func (master *Master) RegisterWorker(args *RegisterArgs, res *MasterRes) error {
 
 func masterInit(task string) {
 	master := new(Master)
-	master.workerChan = make(chan string, MAX_WORKER)
+	master.workerChan = make(chan string, c.MAX_WORKER)
 	master.task = task
 
 	fmt.Println("master rpc register")
@@ -38,7 +38,7 @@ func masterInit(task string) {
 
 
 	//TODO: keep listener in master struct: l, e := net.Listen("tcp", ":1234")
-	if err := http.ListenAndServe("localhost:" + MASTER_PORT, nil); err != nil {
+	if err := http.ListenAndServe("localhost:" + c.MASTER_PORT, nil); err != nil {
 		log.Fatal("Failed to start master process", err)
 	}
 	// fmt.Println("master setup finishes")
