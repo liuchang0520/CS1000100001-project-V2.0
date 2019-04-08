@@ -1,4 +1,16 @@
+stream data =====> flink =====> write to files =====> start MR jobs on these files
+
+
+//////////////////////////////
+/////////////////////////////
+
+
+
+
+
 change the number of M && R, test the latency
+
+worker registration: go channel to store the worker processes port numbers; after the successful registration, worker also can get the ongoing map reduce task name
 
 how to inform the reducers about the location of intermediate files?
 
@@ -8,7 +20,7 @@ deal with slow worker? 95%...
 how to find idle workers? golang: channel;  java: no idea...
 
 task assignment:
-RPC, gRPC
+RPC, gRPC possibly
 
 Master/Worker Simulating:
 	Thread Pool
@@ -34,7 +46,7 @@ About internship:
 //////////////////////////////
 project submit to Prof.Nath:
 go env setup
-shell script	
+shell scrip: assume we have at most 10 workers, to change this max value in .......
 
 
 
@@ -45,3 +57,12 @@ submit:
 We've coverd some assignments for simple map reduce python program, either sequentially or multi threaded.
 
 In this project I will try to simulate this paper: 《...》 for the internal implementation.(task assigment, fault tolarance, etc.)
+
+
+one line of STDIN would become content in one file ?
+multiple line?
+
+
+
+reference:
+https://astaxie.gitbooks.io/build-web-application-with-golang/en/08.4.html
