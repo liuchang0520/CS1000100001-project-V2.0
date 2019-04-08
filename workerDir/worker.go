@@ -9,7 +9,7 @@ import (
 )
 
 type Worker struct { //Worker Struct
-
+	shutDownChan chan bool
 }
 //implement worker's rpc api
 //this rpc api is used to call worker to do a specific map/reduce task
@@ -43,6 +43,7 @@ func workerInit(port string) {
 	go func() {if err := http.ListenAndServe("localhost:" + port, nil); err != nil {
 			log.Fatal("Failed to start worker process", err)
 	}}()
+	<- worker.shutDownChan
 }
 
 func main() {
