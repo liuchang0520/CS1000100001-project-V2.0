@@ -4,23 +4,25 @@ import (
 	"fmt"
 	"os"
 	"log"
+	// "net"
 	"net/rpc"
 	"net/http"
+	"time"
 	c "common"
 )
 
 type Worker struct { //Worker Struct
 	shutDownChan chan bool
-}
-//implement worker's rpc api
-//this rpc api is used to call worker to do a specific map/reduce task
-func (worker *Worker) Work(args *c.WorkArgs, res *c.WorkerRes) error {
-	return nil
+	port string
+	client *rpc.Client
+	// listener net.Listener
 }
 
 
-func workerInit(port string) {
+func workerInit(port string) *Worker {
 	worker := new(Worker)
+	worker.port = port
+	worker.shutDownChan = make(chan bool)
 
 	if err := rpc.Register(worker); err != nil {
 		log.Fatal("worker rpc setup failed", err)
@@ -33,18 +35,21 @@ func workerInit(port string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("client created")
+	fmt.Println("worker client created")
+	worker.client = workerClient
 
 	//register
 	if err = workerClient.Call("Master.RegisterWorker", &c.RegisterArgs{Port: port}, &c.MasterRes{}); err != nil {
 		log.Fatal(err)
 	}
 
-	////TODO: keep listener in worker struct
-	go func() {if err := http.ListenAndServe("localhost:" + port, nil); err != nil {
+	
+	go func() {
+		if err := http.ListenAndServe("localhost:" + port, nil); err != nil {
 			log.Fatal("Failed to start worker process", err)
-	}}()
-	<- worker.shutDownChan
+		}
+	}()
+	return worker
 }
 
 func main() {
@@ -56,5 +61,7 @@ func main() {
 	port := os.Args[1]
 	fmt.Printf("worker will run at port: %s\n", port)
 
-	workerInit(port)
+	worker := workerInit(port)
+	<- worker.shutDownChan
+	time.Sleep(5 * time.Second)
 }

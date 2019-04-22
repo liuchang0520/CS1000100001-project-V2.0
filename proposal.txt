@@ -46,6 +46,9 @@ About internship:
 //////////////////////////////
 project submit to Prof.Nath:
 go env setup
+
+export "GOPATH=$PWD"
+
 shell scrip: assume we have at most 10 workers, to change this max value in .......
 
 

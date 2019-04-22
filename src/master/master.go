@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	// "google.golang.org/grpc"
+	// "net"
 	"log"
 	"net/http"
 	c "common"
@@ -12,21 +14,26 @@ import (
 type Master struct { //master struct
 	task string
 	workerChan chan string
+	closeChan chan bool //send work complete signal to shut down master
+	// workerCloseChan chan bool
+	client []*rpc.Client
+	// listener net.Listener
 }
 
-//implement master's rpc api
-//this rpc api is used to register workers
-func (master *Master) RegisterWorker(args *c.RegisterArgs, res *c.MasterRes) error {
-	fmt.Println(args.Port, " registering")
-	master.workerChan <- args.Port
-	fmt.Printf("worker at port: %s registered\n", args.Port)
-	return nil
-}
 
-func masterInit(task string) {
+func masterInit(task string) *Master {
 	master := new(Master)
 	master.workerChan = make(chan string, c.MAX_WORKER)
 	master.task = task
+	master.client = make([]*rpc.Client, MAX_WORKER)
+	master.closeChan = make(chan bool)
+	// master.workerCloseChan = make(chan bool)
+
+	// l, err := net.Listen("tcp", c.MASTER_PORT)
+	// if err != nil {
+	// 	log.Fatal("master failed to listen: ", err)
+	// }
+	// master.listener = l
 
 	fmt.Println("master rpc register")
 	if err := rpc.Register(master); err != nil {
@@ -36,12 +43,32 @@ func masterInit(task string) {
 	rpc.HandleHTTP()
 	// fmt.Println("http handler started")
 
-
-	//TODO: keep listener in master struct: l, e := net.Listen("tcp", ":1234")
-	if err := http.ListenAndServe("localhost:" + c.MASTER_PORT, nil); err != nil {
-		log.Fatal("Failed to start master process", err)
-	}
+	go func() {
+		if err := http.ListenAndServe("localhost:" + c.MASTER_PORT, nil); err != nil {
+			log.Fatal("Failed to start master process", err)
+		}
+	}()
+	
 	// fmt.Println("master setup finishes")
+	return master
+}
+
+func finish(master *Master) {
+	for _, c := range(master.client) {
+		if err := c.Call("Worker.Close", &c.WorkArgs{}, &c.WorkerRes{}); err != nil {
+			log.Fatal(err)
+		}
+	}
+	master.closeChan <- true
+}
+
+func runTask(master *Master) {
+	fmt.Println("start running tasks...")
+	go func() {
+		assignMapTask()
+		assignReduceTask()
+		finish(master)
+	}()
 }
 
 func main() {
@@ -52,5 +79,11 @@ func main() {
 	task := os.Args[1]
 	fmt.Printf("map reduce task: %s\n", task)
 
-	masterInit(task)
+	master := masterInit(task)
+	runTask(master)
+	<- master.closeChan
+	// master.listener.Close()
+	//send shut down signal to workers
+	// <- master.workerCloseChan
+	fmt.Println("master work complete")
 }
