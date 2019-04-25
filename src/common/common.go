@@ -12,7 +12,8 @@ const (
 	INTERMEDIATE_DIR := "inte"
 	INTERMEDIATE_F_PREFIX := "inter-"
 
-	OUTPUT_DIR := "out"
+	OUTPUT_F_PREFIX := "out"
+	OUTPUT_DIR := "outdir"
 )
 
 

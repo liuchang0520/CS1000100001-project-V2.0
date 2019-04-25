@@ -13,6 +13,18 @@ import (
 )
 
 func mapTask(task, input string, rCnt int, mapFunc func(string, string) c.KV) error {
+	/*
+	map:
+	0) read corresponding input file
+	1) transform the file content to k:v pairs
+		input: 
+		k: input file name
+		v: content
+
+	2) for each k, do hash(k) % r, to get which intermediate file dir to put to
+	   put all intermediate files for a reducer into a folder
+	*/
+
 	var content []byte
 	if content, err := ioutil.ReadFile(input); err != nil {
 		return err
@@ -40,7 +52,7 @@ func mapTask(task, input string, rCnt int, mapFunc func(string, string) c.KV) er
 			return err
 		}
 
-		if _, err = f.WriteString(str); err != nil {
+		if _, err = f.WriteString(str[:len(str) - 1]); err != nil {
 			return err
 		}
 
@@ -51,28 +63,8 @@ func mapTask(task, input string, rCnt int, mapFunc func(string, string) c.KV) er
 }
 
 func reduceTask(task, input string, rCnt int, reduceFunc func(string, string) c.KV) error {
-	
-}
-
-//implement worker's rpc api
-//this rpc api is used to call worker to do a specific map/reduce task
-func (worker *Worker) Work(args *c.WorkArgs, res *c.WorkerRes) error {
-	fmt.Printf("worker: %s doing %s of task - %s\n", worker.port, args.Stage, args.Task)
-	/*
-	map:
-	0) read corresponding input file
-	1) transform the file content to k:v pairs
-		input: 
-		k: input file name
-		v: content
-
-	2) for each k, do hash(k) % r, to get which intermediate file dir to put to
-	   put all intermediate files for a reducer into a folder
-	*/
-	
 	/*
 	reduce:
-
 	1 output file per reducer
 	0) read the ith directory, in which intermediate files for this reducer is stored
 	1) transform to k: v0,v1,v2....combiner
@@ -82,6 +74,22 @@ func (worker *Worker) Work(args *c.WorkArgs, res *c.WorkerRes) error {
 		v: the aggregated value list
 	3) for each output of reduce function, put it into the output file
 	*/
+
+	//create output file
+	outputFile := getOutputF(input)
+	outF, err := os.Create(outputFile)
+	if err != nil {
+		return err
+	}
+	defer outF.Close()
+
+	//TODO: 0) read ......
+}
+
+//implement worker's rpc api
+//this rpc api is used to call worker to do a specific map/reduce task
+func (worker *Worker) Work(args *c.WorkArgs, res *c.WorkerRes) error {
+	fmt.Printf("worker: %s doing %s of task - %s\n", worker.port, args.Stage, args.Task)
 
 	//get the corresponding map and reduce functions for this task
 	mrFunc := funcMap[args.Task]
