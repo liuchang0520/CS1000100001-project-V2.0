@@ -98,12 +98,14 @@ func assignTask(master *Master, stage string) {
 			for temp < c.MAX_TEMP {
 				//get an idle worker
 				w <- master.workerChan
-				if err := master.client[w].Call("Worker.Work", &c.WorkArgs{}, &c.WorkerRes{}); err == nil {
+				var err error
+				if err = master.client[w].Call("Worker.Work", &c.WorkArgs{}, &c.WorkerRes{}); err == nil {
 					wg.Done()
 					fmt.Printf("%s task %d is finished\n", stage, taskIndex)
 					master.workerChan <- w
 					return
 				}
+				fmt.Println(err.Error())
 				fmt.Printf("retry assigning %s task %d\n", stage, taskIndex)
 				temp++
 				master.workerChan <- w
@@ -135,6 +137,9 @@ func main() {
 	}
 	task := os.Args[1]
 	fmt.Printf("map reduce task: %s\n", task)
+	if _, ok := funcMap[task]; !ok {
+		log.Fatal("invalid task, pls check the task name", fmt.Sprintf("valid task names are: %s\n", getValidTask()))
+	}
 
 	master := masterInit(task, os.Args[2], os.Args[3])
 	runTask(master)

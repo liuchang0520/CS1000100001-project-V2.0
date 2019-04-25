@@ -27,5 +27,7 @@ func (master *Master) RegisterWorker(args *c.RegisterArgs, res *c.MasterRes) err
 
 	master.workerChan <- args.Port
 	fmt.Printf("worker at port: %s registered\n", args.Port)
+
+	res.RCnt = master.rCnt
 	return nil
 }

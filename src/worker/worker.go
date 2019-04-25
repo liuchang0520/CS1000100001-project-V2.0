@@ -15,6 +15,7 @@ type Worker struct { //Worker Struct
 	shutDownChan chan bool
 	port string
 	client *rpc.Client
+	rCnt int //number of reducers 
 	// listener net.Listener
 }
 
@@ -39,11 +40,13 @@ func workerInit(port string) *Worker {
 	worker.client = workerClient
 
 	//register
-	if err = workerClient.Call("Master.RegisterWorker", &c.RegisterArgs{Port: port}, &c.MasterRes{}); err != nil {
+	var res &c.MasterRes{}
+	if err = workerClient.Call("Master.RegisterWorker", &c.RegisterArgs{Port: port}, res); err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("number of reduers is %d\n", res.RCnt)
+	worker.rCnt = res.RCnt
 
-	
 	go func() {
 		if err := http.ListenAndServe("localhost:" + port, nil); err != nil {
 			log.Fatal("Failed to start worker process", err)
