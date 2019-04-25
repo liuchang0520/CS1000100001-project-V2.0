@@ -23,7 +23,7 @@ func (master *Master) RegisterWorker(args *c.RegisterArgs, res *c.MasterRes) err
 		return err
 	}
 	fmt.Println("master client created")
-	master.client = append(master.client, masterClient)
+	master.client[args.Port] = masterClient
 
 	master.workerChan <- args.Port
 	fmt.Printf("worker at port: %s registered\n", args.Port)

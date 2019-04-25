@@ -13,6 +13,16 @@ import (
 //implement worker's rpc api
 //this rpc api is used to call worker to do a specific map/reduce task
 func (worker *Worker) Work(args *c.WorkArgs, res *c.WorkerRes) error {
+	/*
+	map:
+	put all intermediate files for a reducer into a folder
+	*/
+	
+	/*
+	*/
+	
+
+
 	return nil
 }
 
