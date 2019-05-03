@@ -83,8 +83,14 @@ func assignTask(master *Master, stage string) {
 
 	var taskCnt int
 	if stage == c.MAP {
+		if err := createInterDir(master.rCnt); err != nil {
+			log.Fatal(err)
+		}
 		taskCnt = len(master.input)
 	} else if stage == c.REDUCE {
+		if err := createOutputDir(); err != nil {
+			log.Fatal(err)
+		}
 		taskCnt = master.rCnt
 	}
 

@@ -12,9 +12,14 @@ import (
 	c "common"
 )
 
+type MRFunc struct {
+	MF func(string, string) c.KV
+	RF func(string, []string) c.KV
+}
+
 var (
-	funcMap := map[string][]func(string, string) c.KV
-    	{"wordCount": [2]func(string, string) c.KV {wordCountMapFunc, wordCountReduceFunc}} 
+	funcMap := map[string]MRFunc
+    	{"wordCount": MRFunc{wordCountMapFunc, wordCountReduceFunc}} 
 )
 
 //for wordCount

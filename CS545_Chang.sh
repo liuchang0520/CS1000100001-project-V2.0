@@ -11,3 +11,6 @@
 
 
 # ./worker 5480
+
+
+#chmod to every dir and file

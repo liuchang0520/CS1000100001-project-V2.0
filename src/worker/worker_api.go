@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"bufio"
 	"io/ioutil"
+	"strings"
 	"os"
 	// "log"
 	"errors"
@@ -41,7 +43,7 @@ func mapTask(task, input string, rCnt int, mapFunc func(string, string) c.KV) er
 
 		//using hash to determine the intermediate file
 		inteIndex := getHashCode(kv.k) % rCnt
-		inteFile[inteIndex] += kv.k + ":" + kv.v + "\n"
+		inteFile[inteIndex] += kv.k + c.KV_SEP + kv.v + "\n"
 	}
 
 	//write buffered data to intermediate file
@@ -62,7 +64,7 @@ func mapTask(task, input string, rCnt int, mapFunc func(string, string) c.KV) er
 	fmt.Printf("map task for %s in task %s is complete\n", input, task)
 }
 
-func reduceTask(task, input string, rCnt int, reduceFunc func(string, string) c.KV) error {
+func reduceTask(task, input string, rCnt int, reduceFunc func(string, []string) c.KV) error {
 	/*
 	reduce:
 	1 output file per reducer
@@ -83,7 +85,45 @@ func reduceTask(task, input string, rCnt int, reduceFunc func(string, string) c.
 	}
 	defer outF.Close()
 
-	//TODO: 0) read ......
+	//build a dictionary to group key-value pair from intermediate files based on keys
+	kvMap := make(map[string][]string)
+
+	//read intermediate files directory for this reducer
+	interDir := getInteDir(i);
+	files, err := ioutil.ReadDir(interDir)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		f, err := os.Open(interDir + file.Name())
+		if err != nil {
+			return err
+		}
+    	defer f.Close()
+
+	    scanner := bufio.NewScanner(f)
+	    for scanner.Scan() {
+	    	kv := strings.Split(scanner.Text(), c.KV_SEP)
+	    	if len(kv) != 2 {
+	    		log.Fatal("cannot parse intermediate file: ", file.Name())
+	    	}
+	    	key, val := kv[0], kv[1]
+	    	vList := []string{}
+	        if tempList, ok := kvMap[key]; ok {
+	        	vList = tempList
+	        }
+	        kvMap[key] = append(vList, val)
+	    }
+
+	    if err = scanner.Err(); err != nil {
+	        return err
+	    }
+	    fmt.Printf("intermediate file: %s has been processed\n", file.Name())
+	}
+
+	//call reduce function per key
+	
 }
 
 //implement worker's rpc api
@@ -95,11 +135,11 @@ func (worker *Worker) Work(args *c.WorkArgs, res *c.WorkerRes) error {
 	mrFunc := funcMap[args.Task]
 
 	if args.Stage == c.MAP {
-		return mapTask(args.Task, args.InputFile, worker.rCnt, mrFunc[0])
+		return mapTask(args.Task, args.InputFile, worker.rCnt, mrFunc.MF)
 	}
 
 	if args.Stage == c.REDUCE {
-		return reduceTask(args.Task, args.InputFile, worker.rCnt, mrFunc[1])
+		return reduceTask(args.Task, args.InputFile, worker.rCnt, mrFunc.RF)
 	}
 	
 	return errors.New(fmt.Sprint("invalid stage: %s\n", args.Stage))

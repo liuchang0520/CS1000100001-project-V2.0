@@ -14,6 +14,8 @@ const (
 
 	OUTPUT_F_PREFIX := "out"
 	OUTPUT_DIR := "outdir"
+
+	KV_SEP = ":"
 )
 
 

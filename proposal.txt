@@ -1,5 +1,6 @@
 stream data =====> flink =====> write to files =====> start MR jobs on these files
 
+input: read from dir
 
 //////////////////////////////
 /////////////////////////////
@@ -33,6 +34,8 @@ Fault tolerance: golang ==> channel, java ...
 
 ZooKeeper
 
+
+For file system, no HDFS involved, just simple File system in MacOS
 
 About internship:
 
@@ -69,3 +72,10 @@ multiple line?
 
 reference:
 https://astaxie.gitbooks.io/build-web-application-with-golang/en/08.4.html
+
+
+
+
+
+
+languate : go, internship, concurrency (go routine, light weighted thread)
