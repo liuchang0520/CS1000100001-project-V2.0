@@ -123,7 +123,12 @@ func reduceTask(task, input string, rCnt int, reduceFunc func(string, []string) 
 	}
 
 	//call reduce function per key
-	
+	for k, v := range kvMap {
+		kvRes = reduceFunc(k, v)
+		if _, err = outF.WriteString(kvRes.k + ":" +kvRes.v + "\n"); err != nil {
+			return err
+		}
+	}
 }
 
 //implement worker's rpc api

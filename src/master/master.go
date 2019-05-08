@@ -25,12 +25,12 @@ type Master struct { //master struct
 }
 
 
-func masterInit(task, input string, rCnt int) *Master {
+func masterInit(task, inputDir string, rCnt int) *Master {
 	master := new(Master)
 	master.workerChan = make(chan string, c.MAX_WORKER)
 	master.task = task
 	master.rCnt = rCnt
-	master.input := getInputF(input)
+	master.input := getInputF(inputDir)
 	master.client = make(map[string]*rpc.Client)
 	master.closeChan = make(chan bool)
 	// master.workerCloseChan = make(chan bool)
@@ -136,7 +136,7 @@ func runTask(master *Master) {
 
 func main() {
 	//args[1] indicates the map reduce task
-	//args[2] indicates the input files, concatenated by '#'.e.g. 1.txt#2.txt
+	//args[2] indicates the input dir
 	//args[3] indicates the number of reducers
 	if len(os.Args) != 4 {
 		log.Fatal("pls specify the mapreduce task, input files, and number of reducers", " args: ", os.Args)

@@ -16,6 +16,7 @@ const (
 	OUTPUT_DIR := "outdir"
 
 	KV_SEP = ":"
+	TEXT_SEP = " "
 )
 
 

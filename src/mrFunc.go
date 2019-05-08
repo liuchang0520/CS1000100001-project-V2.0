@@ -17,6 +17,10 @@ type MRFunc struct {
 	RF func(string, []string) c.KV
 }
 
+const (
+	ONE = "1"
+) 
+
 var (
 	funcMap := map[string]MRFunc
     	{"wordCount": MRFunc{wordCountMapFunc, wordCountReduceFunc}} 
@@ -24,9 +28,9 @@ var (
 
 //for wordCount
 func wordCountMapFunc(key, val string) c.KV {
-
+	return c.KV{k: key, v: ONE}
 }
 
-func wordCountReduceFunc(key, val string) c.KV {
-
+func wordCountReduceFunc(key string, val []string) c.KV {
+	return c.KV{k: key, v: fmt.Sprintf("%d", len(val))}
 }

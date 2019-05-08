@@ -75,7 +75,7 @@ https://astaxie.gitbooks.io/build-web-application-with-golang/en/08.4.html
 
 
 
-
+generate exe and exec file fro MacOS and Windows, write ssh / chmod 777
 
 
 languate : go, internship, concurrency (go routine, light weighted thread)
