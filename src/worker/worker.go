@@ -19,7 +19,6 @@ type Worker struct { //Worker Struct
 	// listener net.Listener
 }
 
-
 func workerInit(port string) *Worker {
 	worker := new(Worker)
 	worker.port = port
