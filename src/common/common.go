@@ -10,7 +10,7 @@ import (
 	"log"
 	// "net/http"
 	// "net/rpc"
-	"strings"
+	// "strings"
 )
 
 type MRFunc struct {
@@ -38,8 +38,10 @@ const (
 	OUTPUT_F_PREFIX = "out"
 	OUTPUT_DIR = "outdir"
 
+	AGGREGATED_OUT_F = "output.txt"
+
 	KV_SEP = ":"
-	TEXT_SEP = " "
+	// TEXT_SEP = " "
 
 	ONE = "1"
 )
@@ -83,9 +85,9 @@ func GetValidTask() string {
 	return res
 }
 
-func SplitWords(str string) []string {
-	return strings.Split(str, TEXT_SEP)
-}
+// func SplitWords(str string) []string {
+// 	return strings.Split(str, TEXT_SEP)
+// }
 
 //get the hash code like Java String.hashCode()
 func GetHashCode(key string) int {

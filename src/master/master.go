@@ -6,6 +6,10 @@ import (
 	// "google.golang.org/grpc"
 	// "net"
 	"strconv"
+	"io/ioutil"
+	// "strings"
+	"bufio"
+	"time"
 	"log"
 	"net/http"
 	c "common"
@@ -113,6 +117,47 @@ func finish(master *Master) {
 	master.closeChan <- true
 }
 
+func aggregate() {
+	//read output files from reducers
+	files, err := ioutil.ReadDir(fmt.Sprintf("../%s/", c.OUTPUT_DIR))
+	if err != nil {
+		fmt.Println("aggregation output failed: ", err)
+		return 
+	}
+
+	//create aggregated output file
+	outF, err := os.Create(fmt.Sprintf("../%s", c.AGGREGATED_OUT_F))
+	if err != nil {
+		fmt.Println("aggregation output failed: ", err)
+		return
+	}
+	defer outF.Close()
+
+	for _, file := range files {
+		f, err := os.Open(fmt.Sprintf("../%s/", c.OUTPUT_DIR) + file.Name())
+		if err != nil {
+			fmt.Println("aggregation output failed: ", err)
+			return
+		}
+    	defer f.Close()
+
+	    scanner := bufio.NewScanner(f)
+	    for scanner.Scan() {
+	    	if _, err = outF.WriteString(scanner.Text() + "\n"); err != nil {
+				fmt.Println("aggregation output failed: ", err)
+				return
+			}
+	    }
+
+	    if err = scanner.Err(); err != nil {
+	    	fmt.Println("aggregation output failed: ", err)
+	        return
+	    }
+	}
+
+	fmt.Printf("output files all have been aggregated to %s\n", c.AGGREGATED_OUT_F)
+}
+
 func assignTask(master *Master, stage string) {
 	/*
 	map stage:
@@ -182,9 +227,16 @@ func assignTask(master *Master, stage string) {
 func runTask(master *Master) {
 	fmt.Println("start running tasks...")
 	go func() {
+		//this is just for Project presentation
+		fmt.Println("wait 10 seconds to get task started")
+		for i := 1; i <= 10; i++ {
+			time.Sleep(time.Second)	
+			fmt.Println(10 - i + 1)
+		}
+
 		assignTask(master, c.MAP)
 		assignTask(master, c.REDUCE)
-		// aggregate() //aggregate reducer output files into a single file
+		aggregate() //aggregate reducer output files into a single file
 		finish(master)
 	}()
 }

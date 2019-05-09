@@ -35,7 +35,7 @@ func MapTask(task, inputDir, input string, rCnt int, mapFunc func(string, string
 		return err
 	}
 
-	words := c.SplitWords(string(content))
+	words := strings.Fields(string(content))
 
 	//buffer the intermediate files
 	//rCnt intermediate files per mapper
