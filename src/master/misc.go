@@ -1,38 +1,38 @@
-package main
+// package main
 
-import (
-	"fmt"
-	"os"
-	"io/ioutil"
-	// "google.golang.org/grpc"
-	// "net"
-	"log"
-	"net/http"
-	c "common"
-	"net/rpc"
-)
+// import (
+// 	"fmt"
+// 	"os"
+// 	"io/ioutil"
+// 	// "google.golang.org/grpc"
+// 	// "net"
+// 	"log"
+// 	"net/http"
+// 	c "common"
+// 	"net/rpc"
+// )
 
-func getInputF(inputDir string) []string {
-	files := []string{}
+// func getInputF(inputDir string) []string {
+// 	files := []string{}
 
-	fs, err := ioutil.ReadDir(inputDir)
-	if err != nil {
-		log.Fatal("read input dir failed: ", err)
-	}
-	for _, f := range fs {
-		files = append(files, f.Name())
+// 	fs, err := ioutil.ReadDir(inputDir)
+// 	if err != nil {
+// 		log.Fatal("read input dir failed: ", err)
+// 	}
+// 	for _, f := range fs {
+// 		files = append(files, f.Name())
 
-	return files
-}
+// 	return files
+// }
 
-func getValidTask() string {
-	res := ""
+// func getValidTask() string {
+// 	res := ""
 
-	for task, _ := range(funcMap) {
-		res += task + "\n"
-	}
+// 	for task, _ := range(funcMap) {
+// 		res += task + "\n"
+// 	}
 
-	return res
-}
+// 	return res
+// }
 
 

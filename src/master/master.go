@@ -5,13 +5,31 @@ import (
 	"os"
 	// "google.golang.org/grpc"
 	// "net"
+	"strconv"
 	"log"
 	"net/http"
 	c "common"
 	"net/rpc"
 	"sync"
-
 )
+
+type WorkArgs struct {
+	Task string
+	Stage string //map or reduce
+
+	//for map, it is an input file; for reducer, it is a directory containing the intermediate files
+	InputFile string
+}
+type WorkerRes struct {
+
+}
+type RegisterArgs struct {
+	Port string
+}
+type MasterRes struct {
+	RCnt int // number of reducers we want to use
+	InputDir string
+}
 
 type Master struct { //master struct
 	task string
@@ -22,15 +40,42 @@ type Master struct { //master struct
 	rCnt int //number of reducer
 	// listener net.Listener
 	input []string //input file names
+	inputDir string
 }
 
+func (master *Master) RegisterWorker(args *RegisterArgs, res *MasterRes) error {
+	fmt.Println(args.Port, " registering")
 
-func masterInit(task, inputDir string, rCnt int) *Master {
+	//create client in master for this worker
+	fmt.Printf("dial worker at port: %s \n", args.Port)
+	masterClient, err := rpc.DialHTTP("tcp", "localhost:" + args.Port)
+	if err != nil {
+		fmt.Printf("failed to dial worker at port: %s \n", args.Port)
+		defer log.Fatal(err)
+		return err
+	}
+	fmt.Println("master client created")
+	master.client[args.Port] = masterClient
+
+	master.workerChan <- args.Port
+	fmt.Printf("worker at port: %s registered\n", args.Port)
+
+	res.RCnt = master.rCnt
+	res.InputDir = master.inputDir
+	return nil
+}
+
+func masterInit(task, inputDir, rCnt string) *Master {
 	master := new(Master)
 	master.workerChan = make(chan string, c.MAX_WORKER)
 	master.task = task
-	master.rCnt = rCnt
-	master.input := getInputF(inputDir)
+	cnt, err := strconv.Atoi(rCnt)
+	if err != nil {
+		log.Fatal("parse number of reducer failed", err)
+	}
+	master.rCnt = cnt
+	master.inputDir = inputDir
+	master.input = c.GetInputF(inputDir)
 	master.client = make(map[string]*rpc.Client)
 	master.closeChan = make(chan bool)
 	// master.workerCloseChan = make(chan bool)
@@ -42,7 +87,7 @@ func masterInit(task, inputDir string, rCnt int) *Master {
 	// master.listener = l
 
 	fmt.Println("master rpc register")
-	if err := rpc.Register(master); err != nil {
+	if err = rpc.Register(master); err != nil {
 		log.Fatal("master rpc setup failed", err)
 	}
 	// fmt.Println("master rpc registered")
@@ -60,8 +105,8 @@ func masterInit(task, inputDir string, rCnt int) *Master {
 }
 
 func finish(master *Master) {
-	for _, c := range(master.client) {
-		if err := c.Call("Worker.Close", &c.WorkArgs{}, &c.WorkerRes{}); err != nil {
+	for _, ct := range(master.client) {
+		if err := ct.Call("Worker.Close", &WorkArgs{}, &WorkerRes{}); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -83,15 +128,17 @@ func assignTask(master *Master, stage string) {
 
 	var taskCnt int
 	if stage == c.MAP {
-		if err := createInterDir(master.rCnt); err != nil {
+		if err := c.CreateInterDir(master.rCnt); err != nil {
 			log.Fatal(err)
 		}
 		taskCnt = len(master.input)
 	} else if stage == c.REDUCE {
-		if err := createOutputDir(); err != nil {
+		if err := c.CreateOutputDir(); err != nil {
 			log.Fatal(err)
 		}
 		taskCnt = master.rCnt
+	} else {
+		log.Fatal("unknown stage: ", stage)
 	}
 
 	var wg sync.WaitGroup //use this to wait all tasks to be finished
@@ -103,9 +150,17 @@ func assignTask(master *Master, stage string) {
 			temp := 0
 			for temp < c.MAX_TEMP {
 				//get an idle worker
-				w <- master.workerChan
+				w := <- master.workerChan
 				var err error
-				if err = master.client[w].Call("Worker.Work", &c.WorkArgs{}, &c.WorkerRes{}); err == nil {
+
+				var inF string
+				if stage == c.MAP {
+					inF = master.input[taskIndex]
+				} else {
+					inF = fmt.Sprintf("%d", taskIndex)
+				}
+				fmt.Printf("call worker at port: %s \n", w)
+				if err = master.client[w].Call("Worker.Work", &WorkArgs{Stage: stage, Task: master.task, InputFile: inF}, &WorkerRes{}); err == nil {
 					wg.Done()
 					fmt.Printf("%s task %d is finished\n", stage, taskIndex)
 					master.workerChan <- w
@@ -116,7 +171,7 @@ func assignTask(master *Master, stage string) {
 				temp++
 				master.workerChan <- w
 			}
-			log.Fatal(fmt.SprintF("in stage %s, %d task cannot be finished\n", stage, taskIndex))
+			log.Fatal(fmt.Sprintf("in stage %s, %d task cannot be finished\n", stage, taskIndex))
 		} (i)
 	}
 
@@ -129,7 +184,7 @@ func runTask(master *Master) {
 	go func() {
 		assignTask(master, c.MAP)
 		assignTask(master, c.REDUCE)
-		aggregate() //aggregate reducer output files into a single file
+		// aggregate() //aggregate reducer output files into a single file
 		finish(master)
 	}()
 }
@@ -139,12 +194,12 @@ func main() {
 	//args[2] indicates the input dir
 	//args[3] indicates the number of reducers
 	if len(os.Args) != 4 {
-		log.Fatal("pls specify the mapreduce task, input files, and number of reducers", " args: ", os.Args)
+		log.Fatal("pls specify the mapreduce task, input file directory, and number of reducers", " args: ", os.Args)
 	}
 	task := os.Args[1]
 	fmt.Printf("map reduce task: %s\n", task)
-	if _, ok := funcMap[task]; !ok {
-		log.Fatal("invalid task, pls check the task name", fmt.Sprintf("valid task names are: %s\n", getValidTask()))
+	if _, ok := c.FuncMap[task]; !ok {
+		log.Fatal("invalid task, pls check the task name", fmt.Sprintf("valid task names are: %s\n", c.GetValidTask()))
 	}
 
 	master := masterInit(task, os.Args[2], os.Args[3])
