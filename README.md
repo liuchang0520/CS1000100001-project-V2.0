@@ -27,10 +27,10 @@ You may have to change the permission of this input folder.
 * open separate shell windows for master and workers setup:
 
 * * For master process, cd to src/master, do:  go run master.go [task_name] [input_dir_name] [number of expected reducers] 
- e.g. go run master.go wordCount wordcount_input 4 ==> This will run a word count task using 4 reducers at port 5450.
+* * * e.g. go run master.go wordCount wordcount_input 4 ==> This will run a word count task using 4 reducers at port 5450.
  You could change the master process port number in MASTER_PORT in common.go
 
 * * For worker processes, cd to src/worker, do: go run worker.go [any_available_port_number_other_than_5450]
-e.g. go run worker.go 5451
+* * * e.g. go run worker.go 5451
 
 * After one map reduce work, pls remove the generated files/dir before doing a new one.
