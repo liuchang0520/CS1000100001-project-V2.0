@@ -1,9 +1,16 @@
-# This project simulates a standalone map reduce system
+# General Overview
 
-which could
+This project simulates a map reduce system:
 
-# proposal.txt contains the project overall idea.
+Different processes simulate master and workers. Task assignment could be achieved by RPC between master and worker processes.
 
-# Pls refer to steps_to_run.txt before beginning
+Implemented very basic fault tolerance mechanism by Go Channel: https://gobyexample.com/channels , in which idle worker process ports are stored.
+
+More detailed idea/implementation is in proposal.txt.
+
+# Steps to run this project in Shell:
+
+
+
 
 
