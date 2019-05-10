@@ -137,7 +137,7 @@ func ReduceTask(task, input string, rCnt int, reduceFunc func(string, []string) 
 	    	fmt.Println(err)
 	        return err
 	    }
-	    fmt.Printf("intermediate file: %s has been processed\n", file.Name())
+	    fmt.Printf("intermediate file: %s%s has been processed\n", interDir, file.Name())
 	}
 
 	//call reduce function per key
@@ -149,6 +149,6 @@ func ReduceTask(task, input string, rCnt int, reduceFunc func(string, []string) 
 		}
 	}
 
-	fmt.Printf("reduce task for %s in task %s is complete\n", input, task)
+	fmt.Printf("reduce task for intermediate dir: %s in task %s is complete\n", interDir, task)
 	return nil
 }

@@ -42,7 +42,7 @@ type WorkerRes struct {
 
 //this rpc api is used to call worker to do a specific map/reduce task
 func (worker *Worker) Work(args *WorkArgs, res *WorkerRes) error {
-	fmt.Printf("worker: %s doing %s of task - %s\n", worker.port, args.Stage, args.Task)
+	fmt.Printf("worker: %s doing %s task - %s\n", worker.port, args.Stage, args.Task)
 
 	//get the corresponding map and reduce functions for this task
 	mrFunc := c.FuncMap[args.Task]
@@ -87,7 +87,7 @@ func workerInit(port string) *Worker {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("worker client created")
+	// fmt.Println("worker client created")
 	worker.client = workerClient
 
 	//register

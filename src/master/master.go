@@ -48,17 +48,17 @@ type MasterRes struct {
 }
 
 func (master *Master) RegisterWorker(args *RegisterArgs, res *MasterRes) error {
-	fmt.Println(args.Port, " registering")
+	fmt.Println("worker at port: ", args.Port, " registering")
 
 	//create client in master for this worker
-	fmt.Printf("dial worker at port: %s \n", args.Port)
+	// fmt.Printf("dial worker at port: %s \n", args.Port)
 	masterClient, err := rpc.DialHTTP("tcp", "localhost:" + args.Port)
 	if err != nil {
 		fmt.Printf("failed to dial worker at port: %s \n", args.Port)
 		defer log.Fatal(err)
 		return err
 	}
-	fmt.Println("master client created")
+	// fmt.Println("master client created")
 	master.client[args.Port] = masterClient
 
 	master.workerChan <- args.Port
@@ -90,7 +90,7 @@ func masterInit(task, inputDir, rCnt string) *Master {
 	// }
 	// master.listener = l
 
-	fmt.Println("master rpc register")
+	// fmt.Println("master rpc register")
 	if err = rpc.Register(master); err != nil {
 		log.Fatal("master rpc setup failed", err)
 	}
@@ -109,7 +109,7 @@ func masterInit(task, inputDir, rCnt string) *Master {
 }
 
 func runTask(master *Master) {
-	fmt.Println("start running tasks...")
+	// fmt.Println("start running tasks...")
 	go func() {
 		//this is just for Project presentation
 		fmt.Println("wait 10 seconds to get task started")
@@ -157,24 +157,26 @@ func assignTask(master *Master, stage string) {
 
 	for i := 0; i < taskCnt; i++ { //assign task
 		wg.Add(1)
-		fmt.Printf("start assigning %s task %d\n", stage, i)
-		go func (taskIndex int) {
+
+		var inf string
+		if stage == c.MAP {
+			inf = master.input[i]
+		} else {
+			inf = fmt.Sprintf("%d", i)
+		}
+
+		// fmt.Printf("start assigning %s task %d\n", stage, i)
+		go func (taskIndex int, inF string) {
 			temp := 0
 			for temp < c.MAX_TEMP {
 				//get an idle worker
 				w := <- master.workerChan
 				var err error
-
-				var inF string
-				if stage == c.MAP {
-					inF = master.input[taskIndex]
-				} else {
-					inF = fmt.Sprintf("%d", taskIndex)
-				}
-				fmt.Printf("call worker at port: %s \n", w)
+				fmt.Printf("start assigning %s task for %s, call worker at port: %s\n", stage, inF, w)
+				// fmt.Printf("call worker at port: %s \n", w)
 				if err = master.client[w].Call("Worker.Work", &WorkArgs{Stage: stage, Task: master.task, InputFile: inF}, &WorkerRes{}); err == nil {
 					wg.Done()
-					fmt.Printf("%s task %d is finished\n", stage, taskIndex)
+					// fmt.Printf("%s task %d is finished\n", stage, taskIndex)
 					master.workerChan <- w
 					return
 				}
@@ -184,7 +186,7 @@ func assignTask(master *Master, stage string) {
 				master.workerChan <- w
 			}
 			log.Fatal(fmt.Sprintf("in stage %s, %d task cannot be finished\n", stage, taskIndex))
-		} (i)
+		} (i, inf)
 	}
 
 	wg.Wait() //use this to wait all tasks to be finished

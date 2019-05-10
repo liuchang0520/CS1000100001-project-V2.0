@@ -1,6 +1,6 @@
 # Overview
 
-This project simulates a map reduce system:
+This project simulates a map reduce system, based on paper MapReduce: Simplified Data Processing on Large Clusters:
 
 Different processes simulate master and workers. Task assignment could be achieved by RPC between master and worker processes.
 
@@ -25,7 +25,7 @@ So far I have only implemented a word count task. To add new map reduce task, pl
 You may have to change the permission of this input folder.
 
 * open separate shell windows for master and workers setup:
-* make sure to get master process running before workers in order to successfully achieve worker registration:
+* * make sure to get master process running before workers in order to successfully achieve worker registration:
 * * For master process, cd to src/master, do:  go run master.go [task_name] [input_dir_name] [number of expected reducers] 
 * * * e.g.    go run master.go wordCount wordcount_input 4 ==> This will run a word count task using 4 reducers at port 5450.
  You could change the master process port number in MASTER_PORT in common.go

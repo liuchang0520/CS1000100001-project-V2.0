@@ -13,6 +13,7 @@ import (
 	// "strings"
 )
 
+//map reduce function
 type MRFunc struct {
 	MF func(string, string) KV
 	RF func(string, []string) KV
@@ -46,11 +47,12 @@ const (
 	ONE = "1"
 )
 
+//map which stores valid map reduce task functions
 var (
 	FuncMap = map[string]MRFunc{"wordCount": MRFunc{wordCountMapFunc, wordCountReduceFunc}} 
 )
 
-//following is the map reduce function
+//following is the map reduce functions
 //for wordCount
 func wordCountMapFunc(key, val string) KV {
 	return KV{K: val, V: ONE}
@@ -61,7 +63,9 @@ func wordCountReduceFunc(key string, val []string) KV {
 }
 
 
-//misc function
+
+//misc functions
+
 func GetInputF(inputDir string) []string {
 	files := []string{}
 
