@@ -17,6 +17,18 @@ import (
 	"sync"
 )
 
+type Master struct { //master struct
+	task string
+	workerChan chan string
+	closeChan chan bool //send work complete signal to shut down master
+	// workerCloseChan chan bool
+	client map[string]*rpc.Client //key: port running worker
+	rCnt int //number of reducer
+	// listener net.Listener
+	input []string //input file names
+	inputDir string
+}
+
 type WorkArgs struct {
 	Task string
 	Stage string //map or reduce
@@ -33,18 +45,6 @@ type RegisterArgs struct {
 type MasterRes struct {
 	RCnt int // number of reducers we want to use
 	InputDir string
-}
-
-type Master struct { //master struct
-	task string
-	workerChan chan string
-	closeChan chan bool //send work complete signal to shut down master
-	// workerCloseChan chan bool
-	client map[string]*rpc.Client //key: port running worker
-	rCnt int //number of reducer
-	// listener net.Listener
-	input []string //input file names
-	inputDir string
 }
 
 func (master *Master) RegisterWorker(args *RegisterArgs, res *MasterRes) error {
@@ -108,54 +108,21 @@ func masterInit(task, inputDir, rCnt string) *Master {
 	return master
 }
 
-func finish(master *Master) {
-	for _, ct := range(master.client) {
-		if err := ct.Call("Worker.Close", &WorkArgs{}, &WorkerRes{}); err != nil {
-			log.Fatal(err)
+func runTask(master *Master) {
+	fmt.Println("start running tasks...")
+	go func() {
+		//this is just for Project presentation
+		fmt.Println("wait 10 seconds to get task started")
+		for i := 1; i <= 10; i++ {
+			time.Sleep(time.Second)	
+			fmt.Println(10 - i + 1)
 		}
-	}
-	master.closeChan <- true
-}
 
-func aggregate() {
-	//read output files from reducers
-	files, err := ioutil.ReadDir(fmt.Sprintf("../%s/", c.OUTPUT_DIR))
-	if err != nil {
-		fmt.Println("aggregation output failed: ", err)
-		return 
-	}
-
-	//create aggregated output file
-	outF, err := os.Create(fmt.Sprintf("../%s", c.AGGREGATED_OUT_F))
-	if err != nil {
-		fmt.Println("aggregation output failed: ", err)
-		return
-	}
-	defer outF.Close()
-
-	for _, file := range files {
-		f, err := os.Open(fmt.Sprintf("../%s/", c.OUTPUT_DIR) + file.Name())
-		if err != nil {
-			fmt.Println("aggregation output failed: ", err)
-			return
-		}
-    	defer f.Close()
-
-	    scanner := bufio.NewScanner(f)
-	    for scanner.Scan() {
-	    	if _, err = outF.WriteString(scanner.Text() + "\n"); err != nil {
-				fmt.Println("aggregation output failed: ", err)
-				return
-			}
-	    }
-
-	    if err = scanner.Err(); err != nil {
-	    	fmt.Println("aggregation output failed: ", err)
-	        return
-	    }
-	}
-
-	fmt.Printf("output files all have been aggregated to %s\n", c.AGGREGATED_OUT_F)
+		assignTask(master, c.MAP)
+		assignTask(master, c.REDUCE)
+		aggregate() //aggregate reducer output files into a single file
+		finish(master)
+	}()
 }
 
 func assignTask(master *Master, stage string) {
@@ -224,21 +191,54 @@ func assignTask(master *Master, stage string) {
 	fmt.Printf("%s stage complete\n", stage)
 }
 
-func runTask(master *Master) {
-	fmt.Println("start running tasks...")
-	go func() {
-		//this is just for Project presentation
-		fmt.Println("wait 10 seconds to get task started")
-		for i := 1; i <= 10; i++ {
-			time.Sleep(time.Second)	
-			fmt.Println(10 - i + 1)
-		}
+func aggregate() {
+	//read output files from reducers
+	files, err := ioutil.ReadDir(fmt.Sprintf("../%s/", c.OUTPUT_DIR))
+	if err != nil {
+		fmt.Println("aggregation output failed: ", err)
+		return 
+	}
 
-		assignTask(master, c.MAP)
-		assignTask(master, c.REDUCE)
-		aggregate() //aggregate reducer output files into a single file
-		finish(master)
-	}()
+	//create aggregated output file
+	outF, err := os.Create(fmt.Sprintf("../%s", c.AGGREGATED_OUT_F))
+	if err != nil {
+		fmt.Println("aggregation output failed: ", err)
+		return
+	}
+	defer outF.Close()
+
+	for _, file := range files {
+		f, err := os.Open(fmt.Sprintf("../%s/", c.OUTPUT_DIR) + file.Name())
+		if err != nil {
+			fmt.Println("aggregation output failed: ", err)
+			return
+		}
+    	defer f.Close()
+
+	    scanner := bufio.NewScanner(f)
+	    for scanner.Scan() {
+	    	if _, err = outF.WriteString(scanner.Text() + "\n"); err != nil {
+				fmt.Println("aggregation output failed: ", err)
+				return
+			}
+	    }
+
+	    if err = scanner.Err(); err != nil {
+	    	fmt.Println("aggregation output failed: ", err)
+	        return
+	    }
+	}
+
+	fmt.Printf("output files all have been aggregated to %s\n", c.AGGREGATED_OUT_F)
+}
+
+func finish(master *Master) {
+	for _, ct := range(master.client) {
+		if err := ct.Call("Worker.Close", &WorkArgs{}, &WorkerRes{}); err != nil {
+			log.Fatal(err)
+		}
+	}
+	master.closeChan <- true
 }
 
 func main() {
