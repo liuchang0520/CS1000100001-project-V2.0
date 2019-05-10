@@ -1,9 +1,9 @@
-#This project simulates a standalone map reduce system
+# This project simulates a standalone map reduce system
 
 which could
 
-#proposal.txt contains the project overall idea.
+# proposal.txt contains the project overall idea.
 
-#Pls refer to steps_to_run.txt before beginning
+# Pls refer to steps_to_run.txt before beginning
 
 
