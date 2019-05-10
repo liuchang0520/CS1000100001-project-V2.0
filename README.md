@@ -7,11 +7,12 @@ Different processes simulate master and workers. Task assignment could be achiev
 Implemented very basic fault tolerance mechanism by Go Channel: https://gobyexample.com/channels , in which idle worker process ports are stored.
 
 Other features:  
-	worker registration: by RPC
+...worker registration: by RPC
 
 More detailed idea/implementation is in proposal.txt.
 
 # Steps to run this project in Shell:
+
 
 
 
