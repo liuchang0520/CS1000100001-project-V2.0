@@ -1,6 +1,6 @@
 # Overview
 
-This project simulates data processing system which preforms map reduce tasks, based on paper 《MapReduce: Simplified Data Processing on Large Clusters》:
+This project simulates data processing system which performs map reduce tasks, based on paper 《MapReduce: Simplified Data Processing on Large Clusters》:
 
 Implemented very basic fault tolerance mechanism by Go Channel: https://gobyexample.com/channels , in which idle worker process ports are stored.
 
